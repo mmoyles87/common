@@ -1,4 +1,4 @@
-// Copyright © 2024 Kaleido, Inc.
+// Copyright © 2026 Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -106,6 +106,9 @@ func (hs *HandlerFactory) getFilePart(req *http.Request) (*multipartState, error
 	}
 	for {
 		part, err := mpr.NextPart()
+		if err == io.EOF {
+			return nil, i18n.NewError(ctx, i18n.MsgMultiPartFormNoFile)
+		}
 		if err != nil {
 			return nil, i18n.WrapError(ctx, err, i18n.MsgMultiPartFormReadError)
 		}

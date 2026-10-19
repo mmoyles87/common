@@ -1,4 +1,4 @@
-// Copyright © 2021 Kaleido, Inc.
+// Copyright © 2026 Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -563,6 +563,79 @@ func TestMultipartBadData(t *testing.T) {
 	var resJSON map[string]interface{}
 	json.NewDecoder(res.Body).Decode(&resJSON)
 	assert.Regexp(t, "FF00161", resJSON["error"])
+}
+
+func TestMultipartNoFilename(t *testing.T) {
+	s, _, done := newTestServer(t, []*Route{{
+		Name:   "testRoute",
+		Path:   "/test",
+		Method: "POST",
+		FormParams: []*FormParam{
+			{Name: "param1", Description: ExampleDesc},
+		},
+		JSONInputValue:  nil,
+		JSONOutputValue: func() interface{} { return make(map[string]interface{}) },
+		JSONOutputCodes: []int{http.StatusCreated},
+		FormUploadHandler: func(r *APIRequest) (output interface{}, err error) {
+			return nil, nil
+		},
+	}}, "", nil)
+	defer done()
+
+	b := new(bytes.Buffer)
+	w := multipart.NewWriter(b)
+	writer, err := w.CreateFormField("param1")
+	assert.NoError(t, err)
+	writer.Write([]byte(`testing`))
+	writer, err = w.CreateFormFile("file", "")
+	assert.NoError(t, err)
+	writer.Write([]byte(`some data`))
+	w.Close()
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/test", s.Addr()), b)
+	assert.NoError(t, err)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 400, res.StatusCode)
+	var resJSON map[string]interface{}
+	json.NewDecoder(res.Body).Decode(&resJSON)
+	assert.Regexp(t, "FF00262", resJSON["error"])
+}
+
+func TestMultipartNoFilePart(t *testing.T) {
+	s, _, done := newTestServer(t, []*Route{{
+		Name:   "testRoute",
+		Path:   "/test",
+		Method: "POST",
+		FormParams: []*FormParam{
+			{Name: "param1", Description: ExampleDesc},
+		},
+		JSONInputValue:  nil,
+		JSONOutputValue: func() interface{} { return make(map[string]interface{}) },
+		JSONOutputCodes: []int{http.StatusCreated},
+		FormUploadHandler: func(r *APIRequest) (output interface{}, err error) {
+			return nil, nil
+		},
+	}}, "", nil)
+	defer done()
+
+	b := new(bytes.Buffer)
+	w := multipart.NewWriter(b)
+	writer, err := w.CreateFormField("param1")
+	assert.NoError(t, err)
+	writer.Write([]byte(`testing`))
+	w.Close()
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/test", s.Addr()), b)
+	assert.NoError(t, err)
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 400, res.StatusCode)
+	var resJSON map[string]interface{}
+	json.NewDecoder(res.Body).Decode(&resJSON)
+	assert.Regexp(t, "FF00262", resJSON["error"])
 }
 
 func TestTextPlain201(t *testing.T) {

@@ -1,4 +1,4 @@
-// Copyright © 2024 Kaleido, Inc.
+// Copyright © 2026 Kaleido, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -196,4 +196,5 @@ var (
 	MsgFFExtensionsInvalidEncoding                 = ffe("FF00259", "Invalid extension key '%s' - extension keys must follow the format 'x-<name>'", http.StatusBadRequest)
 	MsgInvalidCIDR                                 = ffe("FF00260", "Invalid CIDR '%s' in denylist configuration", http.StatusBadRequest)
 	MsgConnectionToCIDRBlocked                     = ffe("FF00261", "Connection to '%s' blocked by CIDR denylist (%s)", http.StatusForbidden)
+	MsgMultiPartFormNoFile                         = ffe("FF00262", "No file found in multi-part form input. The file part must have a filename", http.StatusBadRequest)
 )
